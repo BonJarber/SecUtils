@@ -11,6 +11,11 @@ Usage:
 ./clean_wordlist.sh <wordlist>
 ```
 
+To view the changes you can do:
+```sh
+diff original.txt_cleaned <(sort original.txt) | more
+```
+
 
 ## ports.json
 ```python
