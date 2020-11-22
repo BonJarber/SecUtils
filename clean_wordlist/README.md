@@ -1,7 +1,7 @@
 ## clean_wordlist.sh
 Runs a series of regexes against a wordlist to remove lines the following:
 
-    - The following noisy characters `! ( , %`
+    - The following noisy characters: ! ( , %
     - More than 100 characters (these tend to be overly specific)
     - 4 or more consecutive digits (likely contains an id)
     - Where the last 3 or more characters are digits (likely an id)
@@ -10,7 +10,7 @@ Runs a series of regexes against a wordlist to remove lines the following:
     - More than 6 directories deep (these tend to be overly specific)
     - Containing UUIDs
     - Multiple numbers and letters mixed together (likley noise)
-    - Ending in the following filetypes: `png, jpg, jpeg, gif, svg, bmp, ttf, avif, wav, mp4, aac, ajax, css, all`
+    - Ending in the following filetypes: png, jpg, jpeg, gif, svg, bmp, ttf, avif, wav, mp4, aac, ajax, css, all
 
 ### Usage:
 Specify your wordlist and the script will output you a new version with the suffix "_cleaned"
