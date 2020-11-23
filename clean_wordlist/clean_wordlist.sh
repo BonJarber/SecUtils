@@ -6,7 +6,7 @@ regexes=(
     "[^0-9A-Za-z=/_.-]" # Ignore noisy characters
     ".{100}" # Ignore lines with more than 100 characters (overly specific)
     "[0,1,3-9][1-9][0-9]{2}" # Ignore lines with 4 or more consecutive digits (likely an id) but keep recent years
-    "[0,1,3-9][1-9][0-9]$" # Ignore lines where the last 3 or more characters are digits (likely an id)
+    "[^0][0-9][0-9]$" # Ignore lines where the last 3 or more characters are digits (likely an id)
     "[A-Fa-f0-9]{32}" # Likely MD5 hash or similar
     "[0-9]+[A-Z0-9]{5,}" # Number followed by 5 or more numbers and uppercase letters (almost all noise)
     "\/.*\/.*\/.*\/.*\/.*\/.*\/" # Ignore lines more than 6 directories deep (overly specific)
