@@ -3,36 +3,34 @@
 # diff original.txt_cleaned <(sort original.txt) | more
 
 regexes=(
-    "[\!(,%]" # Ignore noisy characters
-    ".{100,}" # Ignore lines with more than 100 characters (overly specific)
-    "[0-9]{4,}" # Ignore lines with 4 or more consecutive digits (likely an id)
-    "[0-9]{3,}$" # Ignore lines where the last 3 or more characters are digits (likely an id)
-    "[a-z0-9]{32}" # Likely MD5 hash or similar
+    "[^0-9A-Za-z=/_.-]" # Ignore noisy characters
+    ".{100}" # Ignore lines with more than 100 characters (overly specific)
+    "[0,1,3-9][1-9][0-9]{2}" # Ignore lines with 4 or more consecutive digits (likely an id) but keep recent years
+    "[0,1,3-9][1-9][0-9]$" # Ignore lines where the last 3 or more characters are digits (likely an id)
+    "[A-Fa-f0-9]{32}" # Likely MD5 hash or similar
     "[0-9]+[A-Z0-9]{5,}" # Number followed by 5 or more numbers and uppercase letters (almost all noise)
     "\/.*\/.*\/.*\/.*\/.*\/.*\/" # Ignore lines more than 6 directories deep (overly specific)
-    "\w{8}-\w{4}-\w{4}-\w{4}-\w{12}" # Ignore UUIDs
+    "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}" # Ignore UUIDs
+    "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{8}" # Ignore GUIDs
     "[0-9]+[a-zA-Z]+[0-9]+[a-zA-Z]+[0-9]+" # Ignore multiple numbers and letters mixed together (likley noise)
-    "\.(png|jpg|jpeg|gif|svg|bmp|ttf|avif|wav|mp4|aac|ajax|css|all|)$" # Ignore low value filetypes
+    "\.([ot]tf|aac|ajax|all|apk|avif?|axd|bmp|cs[sv]|docx?|eot|exe|flv|gifv?|i[cs]o|jpe?g|lock|m4[av]|map|mp[34]|msi|og[gmv]|pdf|png|rar|svg|swf|ttf|txt|wav|webm|woff2?)($|\?)" # Ignore low value filetypes
 )
 
+[[ $1 == "" ]] && exit
+
 wordlist=$1
+
+runiq="sort -u"
+which runiq >/dev/null && runiq="$(which runiq) -"
+
 echo "[+] Cleaning ${wordlist}"
-original_size=$(cat ${wordlist} | wc -l)
+original_size=$(wc -l < ${wordlist})
 
 # Build command
-cmd="cat ${wordlist}"
-for regex in "${regexes[@]}"; do
-    cmd="${cmd} | grep -vE '${regex}'"
-done
-
-# Add sort, uniq, and save to new file
-cmd="${cmd} | sort | uniq > ${wordlist}_cleaned"
-
-# Execute command
-eval $cmd
+tr ' ' '\n' <<< ${regexes[@]} | grep -vEf - "${wordlist}" | $runiq >${wordlist}_cleaned
 
 # Calculate changes
-new_size=$(cat ${wordlist}_cleaned | wc -l)
+new_size=$(wc -l < ${wordlist}_cleaned)
 removed=$((original_size-new_size))
 
 echo "[-] Removed ${removed} lines"
