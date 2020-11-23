@@ -14,6 +14,7 @@ regexes=(
     "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{8}" # Ignore GUIDs
     "[0-9]+[a-zA-Z]+[0-9]+[a-zA-Z]+[0-9]+" # Ignore multiple numbers and letters mixed together (likley noise)
     "\.([ot]tf|aac|ajax|all|apk|avif?|axd|bmp|cs[sv]|docx?|eot|exe|flv|gifv?|i[cs]o|jpe?g|lock|m4[av]|map|mp[34]|msi|og[gmv]|pdf|png|svg|swf|ttf|wav|webm|woff2?)($|\?)" # Ignore low value filetypes
+    "^$" # Ignore empy lines
 )
 
 [[ $1 == "" ]] && exit
