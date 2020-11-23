@@ -3,7 +3,7 @@
 # diff original.txt_cleaned <(sort original.txt) | more
 
 regexes=(
-    "[^[:space:]0-9A-Za-z=/_.-]" # Ignore noisy characters, include spaces
+    "[[:space:]^0-9A-Za-z=/_.-]" # Ignore noisy characters, include spaces
     ".{100}" # Ignore lines with more than 100 characters (overly specific)
     "[0,1,3-9][1-9][0-9]{2}" # Ignore lines with 4 or more consecutive digits (likely an id) but keep recent years
     "[^0][0-9][0-9]$" # Ignore lines where the last 3 or more characters are digits (likely an id)
@@ -25,8 +25,8 @@ _runiq="sort -u"
 _grep="grep -E"
 
 # Faster alternatives if available
-which runiq >/dev/null && runiq="$(which runiq) -"
-which rg >/dev/null && grep="$(which rg)"
+which runiq >/dev/null && _runiq="$(which runiq) -"
+which rg >/dev/null && _grep="$(which rg)"
 
 echo "[+] Cleaning ${wordlist}"
 original_size=$(wc -l < ${wordlist})
