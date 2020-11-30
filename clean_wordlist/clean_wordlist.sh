@@ -13,6 +13,7 @@ regexes=(
     "\w{8}-\w{4}-\w{4}-\w{4}-\w{12}" # Ignore UUIDs
     "[0-9]+[a-zA-Z]+[0-9]+[a-zA-Z]+[0-9]+" # Ignore multiple numbers and letters mixed together (likley noise)
     "\.(png|jpg|jpeg|gif|svg|bmp|ttf|avif|wav|mp4|aac|ajax|css|all|)$" # Ignore low value filetypes
+    "^$" # Ignores blank lines
 )
 
 wordlist=$1
