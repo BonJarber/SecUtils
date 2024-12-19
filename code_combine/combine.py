@@ -48,15 +48,22 @@ def should_ignore(path, ignore_patterns):
 
     # Convert to string for pattern matching
     path_str = str(path)
+    # Also get just the filename
+    filename = os.path.basename(path_str)
 
     for pattern in ignore_patterns:
         # Handle directory patterns (ending with /)
         if pattern.endswith("/"):
-            if fnmatch.fnmatch(path_str + "/", pattern):
+            if fnmatch.fnmatch(path_str + "/", "*/" + pattern):
                 return True
-        # Handle file patterns
-        elif fnmatch.fnmatch(path_str, pattern):
-            return True
+        # Handle patterns with path separators
+        elif "/" in pattern:
+            if fnmatch.fnmatch(path_str, pattern):
+                return True
+        # Handle simple file patterns (match in any directory)
+        else:
+            if fnmatch.fnmatch(filename, pattern):
+                return True
     return False
 
 
