@@ -41,47 +41,55 @@ def is_in_excluded_dir(path, excluded_dirs=None):
     return any(part in excluded_dirs for part in parts)
 
 
-def should_ignore(path, ignore_patterns, additional_skip_patterns=None):
+def should_ignore(path, start_path, ignore_patterns, additional_skip_patterns=None):
     """Check if path matches any gitignore pattern or additional skip patterns."""
     # First check if path is in an excluded directory
     if is_in_excluded_dir(path):
         return True
 
-    # Convert to string and get relative path for matching
+    # Convert to string and get relative path from start_path
     path_str = str(path)
-    relative_path_str = str(Path(path_str).relative_to(Path(path_str).parent.parent))
+    try:
+        relative_path = path.relative_to(start_path)
+        relative_path_str = str(relative_path)
+    except ValueError:
+        # If path is not relative to start_path, use the full path
+        relative_path_str = path_str
+
     filename = os.path.basename(path_str)
 
-    # First check gitignore patterns
-    for pattern in ignore_patterns:
+    # Helper function to check if a path matches a pattern
+    def matches_pattern(path_to_check, pattern):
+        path_str = str(path_to_check)
         # Handle directory patterns (ending with /)
         if pattern.endswith("/"):
-            if fnmatch.fnmatch(path_str + "/", "*/" + pattern):
-                return True
+            # Remove trailing slash for matching
+            pattern = pattern[:-1]
+            # For patterns with wildcards, use fnmatch
+            if "*" in pattern or "?" in pattern:
+                # Add /* to match directory contents
+                return fnmatch.fnmatch(path_str, pattern) or fnmatch.fnmatch(
+                    path_str, pattern + "/*"
+                )
+            # For literal patterns, use startswith
+            return path_str.startswith(pattern)
         # Handle patterns with path separators
         elif "/" in pattern:
-            if fnmatch.fnmatch(path_str, pattern):
-                return True
+            return fnmatch.fnmatch(path_str, pattern)
         # Handle simple file patterns (match in any directory)
         else:
-            if fnmatch.fnmatch(filename, pattern):
-                return True
+            return fnmatch.fnmatch(filename, pattern)
 
-    # Then check additional skip patterns if any exist
+    # Check gitignore patterns
+    for pattern in ignore_patterns:
+        if matches_pattern(relative_path_str, pattern):
+            return True
+
+    # Check additional skip patterns
     if additional_skip_patterns:
         for pattern in additional_skip_patterns:
-            # Handle directory patterns (ending with /)
-            if pattern.endswith("/"):
-                if fnmatch.fnmatch(relative_path_str, pattern + "*"):
-                    return True
-            # For patterns with path separators, match against the full relative path
-            elif "/" in pattern:
-                if fnmatch.fnmatch(relative_path_str, pattern):
-                    return True
-            # For simple patterns, match against filename only
-            else:
-                if fnmatch.fnmatch(filename, pattern):
-                    return True
+            if matches_pattern(relative_path_str, pattern):
+                return True
 
     return False
 
@@ -101,8 +109,10 @@ def concatenate_files(start_dir, output_file, additional_skip=None):
 
     with open(output_file, "w") as outfile:
         for root, dirs, files in os.walk(start_path):
+            root_path = Path(root)
+
             # Skip this directory entirely if it's in an excluded path
-            if is_in_excluded_dir(root):
+            if is_in_excluded_dir(root_path):
                 dirs.clear()  # Clear dirs list to prevent descending
                 continue
 
@@ -110,15 +120,17 @@ def concatenate_files(start_dir, output_file, additional_skip=None):
             dirs[:] = [
                 d
                 for d in dirs
-                if not should_ignore(Path(root) / d, ignore_patterns, additional_skip)
+                if not should_ignore(
+                    root_path / d, start_path, ignore_patterns, additional_skip
+                )
             ]
 
             for file in sorted(files):  # Sort files for consistent output
-                file_path = Path(root) / file
+                file_path = root_path / file
 
                 # Skip .gitignore itself and ignored files
                 if file == ".gitignore" or should_ignore(
-                    file_path, ignore_patterns, additional_skip
+                    file_path, start_path, ignore_patterns, additional_skip
                 ):
                     continue
 
